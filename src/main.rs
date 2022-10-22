@@ -45,7 +45,9 @@ impl EventHandler for Handler {
                     .create_autocomplete_response(&ctx.http, |response| f(&autocomplete, response))
                     .await
             }
-            _ => unimplemented!(),
+            unsupported_interaction => {
+                unimplemented!("Unsupported interaction: {unsupported_interaction:?}");
+            }
         };
 
         if let Err(err) = result {
