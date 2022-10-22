@@ -57,7 +57,7 @@ impl SlashCommandRespond for DocsSlashCommand {
                         .unwrap();
                 }
                 option_name => {
-                    unreachable!("Unknown option {option_name} of command docs");
+                    unreachable!("Unhandled option {option_name} of command docs");
                 }
             }
         }
@@ -104,7 +104,7 @@ impl SlashCommandAutocomplete for DocsSlashCommand {
                 }
                 option_name => {
                     unreachable!(
-                        "Invalid autocomplete request for option {option_name} of command docs"
+                        "Unhandled autocomplete request for option {option_name} of command docs"
                     );
                 }
             }

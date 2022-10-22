@@ -62,7 +62,9 @@ macro_rules! slash_command_respond {
                 $(
                     $cmd_respond::NAME => <$cmd_respond as SlashCommandRespond>::respond,
                 )*
-                unhandled_command_name => unimplemented!("Unhandled slash command {unhandled_command_name}"),
+                command_name => {
+                    unimplemented!("Unhandled slash command {command_name}");
+                }
             };
 
             $command
@@ -80,7 +82,9 @@ macro_rules! slash_command_autocomplete {
                 $(
                     $cmd_autocomplete::NAME => <$cmd_autocomplete as SlashCommandAutocomplete>::autocomplete,
                 )*
-                unhandled_command_name => unimplemented!("Unhandled autocomplete for slash command {unhandled_command_name}"),
+                command_name => {
+                    unimplemented!("Unhandled autocomplete request for slash command {command_name}");
+                }
             };
 
             $autocomplete
