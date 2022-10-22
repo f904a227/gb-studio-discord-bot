@@ -1,6 +1,11 @@
 mod commands;
 mod content;
 
+use crate::commands::{
+    DocsSlashCommand, PingSlashCommand, SlashCommandAutocomplete, SlashCommandRegister,
+    SlashCommandRespond,
+};
+use lazy_static::lazy_static;
 use serenity::{
     async_trait,
     model::{application::interaction::Interaction, gateway::Ready, id::GuildId},
@@ -8,10 +13,20 @@ use serenity::{
 };
 use std::env;
 
-use crate::commands::{
-    DocsSlashCommand, PingSlashCommand, SlashCommandAutocomplete, SlashCommandRegister,
-    SlashCommandRespond,
-};
+lazy_static! {
+    static ref DISCORD_BOT_TOKEN: String = {
+        env::var("DISCORD_BOT_TOKEN")
+            .expect("Failed to fetch the environment variable DISCORD_BOT_TOKEN")
+    };
+    static ref DISCORD_GUILD_ID: GuildId = {
+        GuildId(
+            env::var("DISCORD_GUILD_ID")
+                .expect("Failed to fetch the environment variable DISCORD_GUILD_ID")
+                .parse()
+                .expect("Failed to parse the environment variable DISCORD_GUILD_ID"),
+        )
+    };
+}
 
 struct Handler;
 
@@ -41,19 +56,12 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("Connected as {}", ready.user.tag());
 
-        // TODO: Move this into a lazy_static and initialize it on start-up.
-        let guild_id = GuildId(
-            env::var("DISCORD_GUILD_ID")
-                .expect("Failed to fetch the environment variable DISCORD_GUILD_ID")
-                .parse()
-                .expect("Failed to parse the environment variable DISCORD_GUILD_ID"),
-        );
-
-        let guild_commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-            slash_command_register!(commands, [PingSlashCommand, DocsSlashCommand])
-        })
-        .await
-        .expect("Failed to create guild application commands");
+        let guild_commands =
+            GuildId::set_application_commands(&DISCORD_GUILD_ID, &ctx.http, |commands| {
+                slash_command_register!(commands, [PingSlashCommand, DocsSlashCommand])
+            })
+            .await
+            .expect("Failed to create guild application commands");
 
         println!("Created the following guild application commands: {guild_commands:#?}");
 
@@ -63,11 +71,10 @@ impl EventHandler for Handler {
 
 #[tokio::main]
 async fn main() {
-    // TODO: Move this into a lazy_static and initialize it on start-up.
-    let token = env::var("DISCORD_BOT_TOKEN")
-        .expect("Failed to fetch the environment variable DISCORD_BOT_TOKEN");
+    lazy_static::initialize(&DISCORD_BOT_TOKEN);
+    lazy_static::initialize(&DISCORD_GUILD_ID);
 
-    let mut client = Client::builder(token, GatewayIntents::empty())
+    let mut client = Client::builder(&*DISCORD_BOT_TOKEN, GatewayIntents::empty())
         .event_handler(Handler)
         .await
         .expect("Failed to create the client");
