@@ -41,3 +41,51 @@ pub(crate) trait SlashCommandAutocomplete: SlashCommandRegister {
         autocomplete: &'a mut CreateAutocompleteResponse,
     ) -> &'a mut CreateAutocompleteResponse;
 }
+
+#[macro_export]
+macro_rules! slash_command_register {
+    ( $commands:expr, [$( $cmd_register:ident ),*] ) => {
+        {
+            $commands
+                $(
+                    .create_application_command(<$cmd_register as SlashCommandRegister>::register)
+                )*
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! slash_command_respond {
+    ( $ctx:expr, $command:expr, [$( $cmd_respond:ident ),*] ) => {
+        {
+            let f = match $command.data.name.as_str() {
+                $(
+                    $cmd_respond::NAME => <$cmd_respond as SlashCommandRespond>::respond,
+                )*
+                unhandled_command_name => unimplemented!("Unhandled slash command {unhandled_command_name}"),
+            };
+
+            $command
+                .create_interaction_response(&$ctx.http, |response| f(&$command, response))
+                .await
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! slash_command_autocomplete {
+    ( $ctx:expr, $autocomplete:expr, [$( $cmd_autocomplete:ident ),*] ) => {
+        {
+            let f = match $autocomplete.data.name.as_str() {
+                $(
+                    $cmd_autocomplete::NAME => <$cmd_autocomplete as SlashCommandAutocomplete>::autocomplete,
+                )*
+                unhandled_command_name => unimplemented!("Unhandled autocomplete for slash command {unhandled_command_name}"),
+            };
+
+            $autocomplete
+                .create_autocomplete_response(&$ctx.http, |response| f(&$autocomplete, response))
+                .await
+        }
+    };
+}

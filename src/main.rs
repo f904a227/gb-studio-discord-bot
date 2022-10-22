@@ -23,27 +23,10 @@ impl EventHandler for Handler {
 
         let result = match interaction {
             Interaction::ApplicationCommand(command) => {
-                // TODO: Do this with a macro.
-                let f = match command.data.name.as_str() {
-                    PingSlashCommand::NAME => PingSlashCommand::respond,
-                    DocsSlashCommand::NAME => DocsSlashCommand::respond,
-                    _ => unimplemented!(),
-                };
-
-                command
-                    .create_interaction_response(&ctx.http, |response| f(&command, response))
-                    .await
+                slash_command_respond!(ctx, command, [PingSlashCommand, DocsSlashCommand])
             }
             Interaction::Autocomplete(autocomplete) => {
-                // TODO: Do this with a macro.
-                let f = match autocomplete.data.name.as_str() {
-                    DocsSlashCommand::NAME => DocsSlashCommand::autocomplete,
-                    _ => unimplemented!(),
-                };
-
-                autocomplete
-                    .create_autocomplete_response(&ctx.http, |response| f(&autocomplete, response))
-                    .await
+                slash_command_autocomplete!(ctx, autocomplete, [DocsSlashCommand])
             }
             unsupported_interaction => {
                 unimplemented!("Unsupported interaction: {unsupported_interaction:?}");
@@ -67,10 +50,7 @@ impl EventHandler for Handler {
         );
 
         let guild_commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-            // TODO: Do this with a macro.
-            commands
-                .create_application_command(PingSlashCommand::register)
-                .create_application_command(DocsSlashCommand::register)
+            slash_command_register!(commands, [PingSlashCommand, DocsSlashCommand])
         })
         .await
         .expect("Failed to create guild application commands");
