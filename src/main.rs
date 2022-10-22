@@ -1,4 +1,5 @@
 mod commands;
+mod content;
 
 use serenity::{
     async_trait,
@@ -7,7 +8,10 @@ use serenity::{
 };
 use std::env;
 
-use crate::commands::{PingSlashCommand, SlashCommandRegister, SlashCommandRespond};
+use crate::commands::{
+    DocsSlashCommand, PingSlashCommand, SlashCommandAutocomplete, SlashCommandRegister,
+    SlashCommandRespond,
+};
 
 struct Handler;
 
@@ -22,6 +26,7 @@ impl EventHandler for Handler {
                 // TODO: Do this with a macro.
                 let f = match command.data.name.as_str() {
                     PingSlashCommand::NAME => PingSlashCommand::respond,
+                    DocsSlashCommand::NAME => DocsSlashCommand::respond,
                     _ => unimplemented!(),
                 };
 
@@ -32,7 +37,20 @@ impl EventHandler for Handler {
                     eprintln!("Failed to respond to interaction: {err}");
                 }
             }
+            Interaction::Autocomplete(autocomplete) => {
+                // TODO: Do this with a macro.
+                let f = match autocomplete.data.name.as_str() {
+                    DocsSlashCommand::NAME => DocsSlashCommand::autocomplete,
+                    _ => unimplemented!(),
+                };
 
+                if let Err(err) = autocomplete
+                    .create_autocomplete_response(&ctx.http, |response| f(&autocomplete, response))
+                    .await
+                {
+                    eprintln!("Failed to respond to interaction: {err}");
+                }
+            }
             _ => unimplemented!(),
         };
     }
@@ -50,7 +68,9 @@ impl EventHandler for Handler {
 
         let guild_commands = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
             // TODO: Do this with a macro.
-            commands.create_application_command(PingSlashCommand::register)
+            commands
+                .create_application_command(PingSlashCommand::register)
+                .create_application_command(DocsSlashCommand::register)
         })
         .await
         .expect("Failed to create guild application commands");

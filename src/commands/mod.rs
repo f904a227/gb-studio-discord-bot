@@ -1,20 +1,26 @@
+mod docs;
 mod ping;
 
 pub(self) mod prelude {
-    pub(super) use super::{SlashCommandRegister, SlashCommandRespond};
+    pub(super) use super::{SlashCommandAutocomplete, SlashCommandRegister, SlashCommandRespond};
     pub(super) use serenity::{
-        builder::{CreateApplicationCommand, CreateInteractionResponse},
+        builder::{
+            CreateApplicationCommand, CreateAutocompleteResponse, CreateInteractionResponse,
+        },
         model::application::interaction::{
-            application_command::ApplicationCommandInteraction, InteractionResponseType,
+            application_command::ApplicationCommandInteraction,
+            autocomplete::AutocompleteInteraction, InteractionResponseType,
         },
     };
 }
 
-pub(crate) use ping::PingSlashCommand;
 use serenity::{
-    builder::{CreateApplicationCommand, CreateInteractionResponse},
-    model::application::interaction::application_command::ApplicationCommandInteraction,
+    builder::{CreateApplicationCommand, CreateAutocompleteResponse, CreateInteractionResponse},
+    model::application::interaction::{
+        application_command::ApplicationCommandInteraction, autocomplete::AutocompleteInteraction,
+    },
 };
+pub(crate) use {docs::DocsSlashCommand, ping::PingSlashCommand};
 
 pub(crate) trait SlashCommandRegister {
     const NAME: &'static str;
@@ -27,4 +33,11 @@ pub(crate) trait SlashCommandRespond: SlashCommandRegister {
         interaction: &ApplicationCommandInteraction,
         response: &'b mut CreateInteractionResponse<'a>,
     ) -> &'b mut CreateInteractionResponse<'a>;
+}
+
+pub(crate) trait SlashCommandAutocomplete: SlashCommandRegister {
+    fn autocomplete<'a>(
+        interaction: &AutocompleteInteraction,
+        autocomplete: &'a mut CreateAutocompleteResponse,
+    ) -> &'a mut CreateAutocompleteResponse;
 }
