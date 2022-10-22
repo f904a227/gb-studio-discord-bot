@@ -21,7 +21,7 @@ impl EventHandler for Handler {
         #[cfg(debug_assertions)]
         println!("Received interaction: {interaction:#?}");
 
-        match interaction {
+        let result = match interaction {
             Interaction::ApplicationCommand(command) => {
                 // TODO: Do this with a macro.
                 let f = match command.data.name.as_str() {
@@ -30,12 +30,9 @@ impl EventHandler for Handler {
                     _ => unimplemented!(),
                 };
 
-                if let Err(err) = command
+                command
                     .create_interaction_response(&ctx.http, |response| f(&command, response))
                     .await
-                {
-                    eprintln!("Failed to respond to interaction: {err}");
-                }
             }
             Interaction::Autocomplete(autocomplete) => {
                 // TODO: Do this with a macro.
@@ -44,15 +41,16 @@ impl EventHandler for Handler {
                     _ => unimplemented!(),
                 };
 
-                if let Err(err) = autocomplete
+                autocomplete
                     .create_autocomplete_response(&ctx.http, |response| f(&autocomplete, response))
                     .await
-                {
-                    eprintln!("Failed to respond to interaction: {err}");
-                }
             }
             _ => unimplemented!(),
         };
+
+        if let Err(err) = result {
+            eprintln!("Failed to respond to interaction: {err}");
+        }
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
