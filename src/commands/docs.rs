@@ -5,6 +5,7 @@ use serenity::model::application::{
     command::CommandOptionType,
     interaction::{application_command::CommandDataOptionValue, MessageFlags},
 };
+use sublime_fuzzy::{FuzzySearch, Scoring};
 
 pub(crate) struct DocsSlashCommand;
 
@@ -50,8 +51,10 @@ impl SlashCommandRespond for DocsSlashCommand {
 
                     content = docs::INDEX
                         .entries()
-                        .min_by_key(|entry| {
-                            strsim::damerau_levenshtein(resolved_option_value, entry.0)
+                        .max_by_key(|entry| {
+                            FuzzySearch::new(resolved_option_value, entry.0)
+                                .case_insensitive()
+                                .best_match()
                         })
                         .map(|entry| entry.1)
                         .unwrap();
@@ -92,12 +95,17 @@ impl SlashCommandAutocomplete for DocsSlashCommand {
                         }
                     };
 
+                    let scoring = Scoring::emphasize_word_starts();
                     docs::INDEX
                         .keys()
                         .sorted_by_key(|key| {
-                            strsim::damerau_levenshtein(resolved_option_value, key)
+                            FuzzySearch::new(resolved_option_value, key)
+                                .score_with(&scoring)
+                                .case_insensitive()
+                                .best_match()
                         })
-                        .take(10)
+                        .rev()
+                        .take(5)
                         .for_each(|s| {
                             autocomplete.add_string_choice(s, s);
                         });
