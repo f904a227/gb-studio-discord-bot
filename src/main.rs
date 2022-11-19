@@ -1,9 +1,16 @@
 mod commands;
+mod components;
 mod content;
 
-use crate::commands::{
-    DocsSlashCommand, PingSlashCommand, SlashCommandAutocomplete, SlashCommandRegister,
-    SlashCommandRespond,
+use crate::{
+    commands::{
+        DocsSlashCommand, PingSlashCommand, RolesSlashCommand, SlashCommandAutocomplete,
+        SlashCommandRegister, SlashCommandRespond,
+    },
+    components::buttons::{
+        ArtistRoleButton, BetaTesterRoleRoleButton, ButtonCreate, ButtonRespond,
+        DesignerRoleButton, HardwareEnthusiastRoleButton, MusicianRoleButton, ScripterRoleButton,
+    },
 };
 use lazy_static::lazy_static;
 use serenity::{
@@ -38,10 +45,33 @@ impl EventHandler for Handler {
 
         let result = match interaction {
             Interaction::ApplicationCommand(command) => {
-                slash_command_respond!(ctx, command, [PingSlashCommand, DocsSlashCommand])
+                slash_command_respond!(
+                    ctx,
+                    command,
+                    [PingSlashCommand, DocsSlashCommand, RolesSlashCommand]
+                )
             }
             Interaction::Autocomplete(autocomplete) => {
                 slash_command_autocomplete!(ctx, autocomplete, [DocsSlashCommand])
+            }
+            Interaction::MessageComponent(component) => {
+                let f = match component.data.custom_id.as_str() {
+                    ArtistRoleButton::CUSTOM_ID => ArtistRoleButton::respond,
+                    BetaTesterRoleRoleButton::CUSTOM_ID => BetaTesterRoleRoleButton::respond,
+                    DesignerRoleButton::CUSTOM_ID => DesignerRoleButton::respond,
+                    HardwareEnthusiastRoleButton::CUSTOM_ID => {
+                        HardwareEnthusiastRoleButton::respond
+                    }
+                    MusicianRoleButton::CUSTOM_ID => MusicianRoleButton::respond,
+                    ScripterRoleButton::CUSTOM_ID => ScripterRoleButton::respond,
+                    component_id => {
+                        unimplemented!("Unhandled component interaction {component_id}");
+                    }
+                };
+
+                component
+                    .create_interaction_response(&ctx.http, |response| f(&component, response))
+                    .await
             }
             unsupported_interaction => {
                 unimplemented!("Unsupported interaction: {unsupported_interaction:?}");
@@ -58,7 +88,10 @@ impl EventHandler for Handler {
 
         let guild_commands =
             GuildId::set_application_commands(&DISCORD_GUILD_ID, &ctx.http, |commands| {
-                slash_command_register!(commands, [PingSlashCommand, DocsSlashCommand])
+                slash_command_register!(
+                    commands,
+                    [PingSlashCommand, DocsSlashCommand, RolesSlashCommand]
+                )
             })
             .await
             .expect("Failed to create guild application commands");

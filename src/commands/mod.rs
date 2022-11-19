@@ -1,5 +1,6 @@
 mod docs;
 mod ping;
+mod roles;
 
 pub(self) mod prelude {
     pub(super) use super::{SlashCommandAutocomplete, SlashCommandRegister, SlashCommandRespond};
@@ -20,7 +21,7 @@ use serenity::{
         application_command::ApplicationCommandInteraction, autocomplete::AutocompleteInteraction,
     },
 };
-pub(crate) use {docs::DocsSlashCommand, ping::PingSlashCommand};
+pub(crate) use {docs::DocsSlashCommand, ping::PingSlashCommand, roles::RolesSlashCommand};
 
 pub(crate) trait SlashCommandRegister {
     const NAME: &'static str;
