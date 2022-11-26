@@ -16,7 +16,7 @@ impl<R: RoleDescribe> ComponentCreate for RoleButton<R> {
 
     fn create(button: &mut Self::CreateBuilder) -> &mut Self::CreateBuilder {
         button
-            .custom_id(R::NAME)
+            .custom_id(Self::CUSTOM_ID)
             .emoji(R::EMOJI)
             .label(R::NAME)
             .style(ButtonStyle::Secondary)
