@@ -12,13 +12,18 @@ impl SlashCommandRegister for PingSlashCommand {
     }
 }
 
+#[async_trait]
 impl SlashCommandRespond for PingSlashCommand {
-    fn respond<'a, 'b>(
-        _interaction: &ApplicationCommandInteraction,
-        response: &'b mut CreateInteractionResponse<'a>,
-    ) -> &'b mut CreateInteractionResponse<'a> {
-        response
-            .kind(InteractionResponseType::ChannelMessageWithSource)
-            .interaction_response_data(|data| data.content("Pong!"))
+    async fn respond(
+        ctx: Context,
+        interaction: &ApplicationCommandInteraction,
+    ) -> serenity::Result<()> {
+        interaction
+            .create_interaction_response(&ctx.http, |response| {
+                response
+                    .kind(InteractionResponseType::ChannelMessageWithSource)
+                    .interaction_response_data(|data| data.content("Pong!"))
+            })
+            .await
     }
 }

@@ -5,7 +5,7 @@ use crate::{
         HardwareEnthusiastRoleButton, MusicianRoleButton, ScripterRoleButton,
     },
     {
-        components::buttons::ButtonCreate,
+        components::ComponentCreate,
         content::roles::{self, RoleDescribe},
     },
 };
@@ -23,11 +23,12 @@ impl SlashCommandRegister for RolesSlashCommand {
     }
 }
 
+#[async_trait]
 impl SlashCommandRespond for RolesSlashCommand {
-    fn respond<'a, 'b>(
-        _interaction: &ApplicationCommandInteraction,
-        response: &'b mut CreateInteractionResponse<'a>,
-    ) -> &'b mut CreateInteractionResponse<'a> {
+    async fn respond(
+        ctx: Context,
+        interaction: &ApplicationCommandInteraction,
+    ) -> serenity::Result<()> {
         fn describe_role_to_field<R: RoleDescribe>() -> (String, &'static str, bool) {
             (format!("{} {}", R::EMOJI, R::NAME), R::DESCRIPTION, true)
         }
@@ -41,25 +42,29 @@ impl SlashCommandRespond for RolesSlashCommand {
             describe_role_to_field::<roles::ScripterRole>(),
         ];
 
-        response
-            .kind(InteractionResponseType::ChannelMessageWithSource)
-            .interaction_response_data(|data| {
-                data.embed(|embed| embed.fields(fields))
-                    .components(|components| {
-                        components
-                            .create_action_row(|action_row| {
-                                action_row
-                                    .create_button(ArtistRoleButton::create)
-                                    .create_button(BetaTesterRoleRoleButton::create)
-                                    .create_button(DesignerRoleButton::create)
-                            })
-                            .create_action_row(|action_row| {
-                                action_row
-                                    .create_button(HardwareEnthusiastRoleButton::create)
-                                    .create_button(MusicianRoleButton::create)
-                                    .create_button(ScripterRoleButton::create)
+        interaction
+            .create_interaction_response(&ctx.http, |response| {
+                response
+                    .kind(InteractionResponseType::ChannelMessageWithSource)
+                    .interaction_response_data(|data| {
+                        data.embed(|embed| embed.fields(fields))
+                            .components(|components| {
+                                components
+                                    .create_action_row(|action_row| {
+                                        action_row
+                                            .create_button(ArtistRoleButton::create)
+                                            .create_button(BetaTesterRoleRoleButton::create)
+                                            .create_button(DesignerRoleButton::create)
+                                    })
+                                    .create_action_row(|action_row| {
+                                        action_row
+                                            .create_button(HardwareEnthusiastRoleButton::create)
+                                            .create_button(MusicianRoleButton::create)
+                                            .create_button(ScripterRoleButton::create)
+                                    })
                             })
                     })
             })
+            .await
     }
 }

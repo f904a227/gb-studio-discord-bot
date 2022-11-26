@@ -9,23 +9,26 @@ pub(crate) struct RoleButton<R: RoleDescribe> {
     phantom: PhantomData<R>,
 }
 
-impl<R: RoleDescribe> ButtonCreate for RoleButton<R> {
+impl<R: RoleDescribe> ComponentCreate for RoleButton<R> {
     const CUSTOM_ID: &'static str = R::NAME;
 
-    fn create(button: &mut CreateButton) -> &mut CreateButton {
+    type CreateBuilder = CreateButton;
+
+    fn create(button: &mut Self::CreateBuilder) -> &mut Self::CreateBuilder {
         button
-            .custom_id(Self::CUSTOM_ID)
+            .custom_id(R::NAME)
             .emoji(R::EMOJI)
             .label(R::NAME)
             .style(ButtonStyle::Secondary)
     }
 }
 
-impl<R: RoleDescribe> ButtonRespond for RoleButton<R> {
-    fn respond<'a, 'b>(
+#[async_trait]
+impl<R: RoleDescribe> ComponentRespond for RoleButton<R> {
+    async fn respond(
+        _ctx: Context,
         _component: &MessageComponentInteraction,
-        _response: &'b mut CreateInteractionResponse<'a>,
-    ) -> &'b mut CreateInteractionResponse<'a> {
+    ) -> serenity::Result<()> {
         todo!()
     }
 }

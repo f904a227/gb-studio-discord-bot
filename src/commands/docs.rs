@@ -1,9 +1,12 @@
 use super::prelude::*;
 use crate::content::docs;
 use itertools::Itertools;
-use serenity::model::application::{
-    command::CommandOptionType,
-    interaction::{application_command::CommandDataOptionValue, MessageFlags},
+use serenity::{
+    json::{json, Value},
+    model::application::{
+        command::CommandOptionType,
+        interaction::{application_command::CommandDataOptionValue, MessageFlags},
+    },
 };
 use sublime_fuzzy::{FuzzySearch, Scoring};
 
@@ -26,11 +29,12 @@ impl SlashCommandRegister for DocsSlashCommand {
     }
 }
 
+#[async_trait]
 impl SlashCommandRespond for DocsSlashCommand {
-    fn respond<'a, 'b>(
+    async fn respond(
+        ctx: Context,
         interaction: &ApplicationCommandInteraction,
-        response: &'b mut CreateInteractionResponse<'a>,
-    ) -> &'b mut CreateInteractionResponse<'a> {
+    ) -> serenity::Result<()> {
         let options = &interaction.data.options;
 
         let mut content = docs::ROOT; // Default response content.
@@ -65,19 +69,24 @@ impl SlashCommandRespond for DocsSlashCommand {
             }
         }
 
-        response
-            .kind(InteractionResponseType::ChannelMessageWithSource)
-            .interaction_response_data(|data| {
-                data.content(content).flags(MessageFlags::SUPPRESS_EMBEDS)
+        interaction
+            .create_interaction_response(&ctx.http, |response| {
+                response
+                    .kind(InteractionResponseType::ChannelMessageWithSource)
+                    .interaction_response_data(|data| {
+                        data.content(content).flags(MessageFlags::SUPPRESS_EMBEDS)
+                    })
             })
+            .await
     }
 }
 
+#[async_trait]
 impl SlashCommandAutocomplete for DocsSlashCommand {
-    fn autocomplete<'a>(
+    async fn autocomplete(
+        ctx: Context,
         interaction: &AutocompleteInteraction,
-        autocomplete: &'a mut CreateAutocompleteResponse,
-    ) -> &'a mut CreateAutocompleteResponse {
+    ) -> serenity::Result<()> {
         let options = &interaction.data.options;
 
         if let Some(focused_option) = options.iter().find(|option| option.focused) {
@@ -96,7 +105,7 @@ impl SlashCommandAutocomplete for DocsSlashCommand {
                     };
 
                     let scoring = Scoring::emphasize_word_starts();
-                    docs::INDEX
+                    let choices: Vec<_> = docs::INDEX
                         .keys()
                         .sorted_by_key(|key| {
                             FuzzySearch::new(resolved_option_value, key)
@@ -106,9 +115,19 @@ impl SlashCommandAutocomplete for DocsSlashCommand {
                         })
                         .rev()
                         .take(5)
-                        .for_each(|s| {
-                            autocomplete.add_string_choice(s, s);
-                        });
+                        .map(|s| {
+                            json!({
+                                "name": s,
+                                "value": s
+                            })
+                        })
+                        .collect();
+
+                    return interaction
+                        .create_autocomplete_response(&ctx.http, |autocomplete| {
+                            autocomplete.set_choices(Value::Array(choices))
+                        })
+                        .await;
                 }
                 option_name => {
                     unreachable!(
@@ -118,6 +137,6 @@ impl SlashCommandAutocomplete for DocsSlashCommand {
             }
         }
 
-        autocomplete
+        Ok(())
     }
 }

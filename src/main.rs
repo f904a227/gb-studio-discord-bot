@@ -3,13 +3,10 @@ mod components;
 mod content;
 
 use crate::{
-    commands::{
-        DocsSlashCommand, PingSlashCommand, RolesSlashCommand, SlashCommandAutocomplete,
-        SlashCommandRegister, SlashCommandRespond,
-    },
+    commands::{DocsSlashCommand, PingSlashCommand, RolesSlashCommand},
     components::buttons::{
-        ArtistRoleButton, BetaTesterRoleRoleButton, ButtonCreate, ButtonRespond,
-        DesignerRoleButton, HardwareEnthusiastRoleButton, MusicianRoleButton, ScripterRoleButton,
+        ArtistRoleButton, BetaTesterRoleRoleButton, DesignerRoleButton,
+        HardwareEnthusiastRoleButton, MusicianRoleButton, ScripterRoleButton,
     },
 };
 use lazy_static::lazy_static;
@@ -50,28 +47,25 @@ impl EventHandler for Handler {
                     command,
                     [PingSlashCommand, DocsSlashCommand, RolesSlashCommand]
                 )
+                .await
             }
             Interaction::Autocomplete(autocomplete) => {
-                slash_command_autocomplete!(ctx, autocomplete, [DocsSlashCommand])
+                slash_command_autocomplete!(ctx, autocomplete, [DocsSlashCommand]).await
             }
             Interaction::MessageComponent(component) => {
-                let f = match component.data.custom_id.as_str() {
-                    ArtistRoleButton::CUSTOM_ID => ArtistRoleButton::respond,
-                    BetaTesterRoleRoleButton::CUSTOM_ID => BetaTesterRoleRoleButton::respond,
-                    DesignerRoleButton::CUSTOM_ID => DesignerRoleButton::respond,
-                    HardwareEnthusiastRoleButton::CUSTOM_ID => {
-                        HardwareEnthusiastRoleButton::respond
-                    }
-                    MusicianRoleButton::CUSTOM_ID => MusicianRoleButton::respond,
-                    ScripterRoleButton::CUSTOM_ID => ScripterRoleButton::respond,
-                    component_id => {
-                        unimplemented!("Unhandled component interaction {component_id}");
-                    }
-                };
-
-                component
-                    .create_interaction_response(&ctx.http, |response| f(&component, response))
-                    .await
+                component_respond!(
+                    ctx,
+                    component,
+                    [
+                        ArtistRoleButton,
+                        BetaTesterRoleRoleButton,
+                        DesignerRoleButton,
+                        HardwareEnthusiastRoleButton,
+                        MusicianRoleButton,
+                        ScripterRoleButton
+                    ]
+                )
+                .await
             }
             unsupported_interaction => {
                 unimplemented!("Unsupported interaction: {unsupported_interaction:?}");
