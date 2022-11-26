@@ -25,11 +25,11 @@ impl<R: RoleDescribe> ComponentCreate for RoleButton<R> {
 
 #[async_trait]
 impl<R: RoleDescribe> ComponentRespond for RoleButton<R> {
-    async fn respond(ctx: Context, component: &mut MessageComponentInteraction) {
-        let member = if let Some(member) = component.member.as_mut() {
+    async fn respond(ctx: Context, interaction: &mut MessageComponentInteraction) {
+        let member = if let Some(member) = interaction.member.as_mut() {
             member
         } else {
-            if let Err(err) = component
+            if let Err(err) = interaction
                 .create_interaction_response(&ctx.http, |response| {
                     response
                         .kind(InteractionResponseType::ChannelMessageWithSource)
@@ -44,7 +44,9 @@ impl<R: RoleDescribe> ComponentRespond for RoleButton<R> {
             return;
         };
 
-        let guild_id = component.guild_id.expect("`member` data should be present");
+        let guild_id = interaction
+            .guild_id
+            .expect("`member` data should be present");
 
         let roles = match guild_id.roles(&ctx.http).await {
             Ok(roles) => roles,
@@ -91,7 +93,7 @@ impl<R: RoleDescribe> ComponentRespond for RoleButton<R> {
             ),
         };
 
-        if let Err(err) = component
+        if let Err(err) = interaction
             .create_interaction_response(&ctx.http, |response| {
                 response
                     .kind(InteractionResponseType::ChannelMessageWithSource)

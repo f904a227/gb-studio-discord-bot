@@ -25,8 +25,7 @@ pub(crate) trait ComponentCreate {
 
 #[async_trait]
 pub(crate) trait ComponentRespond: ComponentCreate {
-    // TODO: Rename parameter name from component to interaction.
-    async fn respond(ctx: Context, component: &mut MessageComponentInteraction);
+    async fn respond(ctx: Context, interaction: &mut MessageComponentInteraction);
 }
 
 #[macro_export]
