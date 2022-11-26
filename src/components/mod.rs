@@ -1,8 +1,11 @@
 pub(self) mod prelude {
     pub(super) use super::{ComponentCreate, ComponentRespond};
     pub(super) use serenity::{
-        async_trait, client::Context,
-        model::application::interaction::message_component::MessageComponentInteraction,
+        async_trait,
+        client::Context,
+        model::application::interaction::{
+            message_component::MessageComponentInteraction, InteractionResponseType, MessageFlags,
+        },
     };
 }
 pub(crate) mod buttons;
@@ -22,8 +25,11 @@ pub(crate) trait ComponentCreate {
 
 #[async_trait]
 pub(crate) trait ComponentRespond: ComponentCreate {
-    async fn respond(ctx: Context, component: &MessageComponentInteraction)
-        -> serenity::Result<()>;
+    // TODO: Rename parameter name from component to interaction.
+    async fn respond(
+        ctx: Context,
+        component: &mut MessageComponentInteraction,
+    ) -> serenity::Result<()>;
 }
 
 #[macro_export]
@@ -34,7 +40,7 @@ macro_rules! component_respond {
 
             match $component.data.custom_id.as_str() {
                 $(
-                    <$component_respond as ComponentCreate>::CUSTOM_ID => <$component_respond as ComponentRespond>::respond($ctx, &$component),
+                    <$component_respond as ComponentCreate>::CUSTOM_ID => <$component_respond as ComponentRespond>::respond($ctx, &mut $component),
                 )*
                 component_id => {
                     unimplemented!("Unhandled component interaction {component_id}");

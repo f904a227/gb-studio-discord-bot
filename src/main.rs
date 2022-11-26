@@ -52,7 +52,7 @@ impl EventHandler for Handler {
             Interaction::Autocomplete(autocomplete) => {
                 slash_command_autocomplete!(ctx, autocomplete, [DocsSlashCommand]).await
             }
-            Interaction::MessageComponent(component) => {
+            Interaction::MessageComponent(mut component) => {
                 component_respond!(
                     ctx,
                     component,
