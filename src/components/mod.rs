@@ -26,10 +26,7 @@ pub(crate) trait ComponentCreate {
 #[async_trait]
 pub(crate) trait ComponentRespond: ComponentCreate {
     // TODO: Rename parameter name from component to interaction.
-    async fn respond(
-        ctx: Context,
-        component: &mut MessageComponentInteraction,
-    ) -> serenity::Result<()>;
+    async fn respond(ctx: Context, component: &mut MessageComponentInteraction);
 }
 
 #[macro_export]

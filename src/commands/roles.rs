@@ -16,19 +16,17 @@ impl SlashCommandRegister for RolesSlashCommand {
     const NAME: &'static str = "roles";
 
     fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-        // TODO: Restrict permission.
         command
             .name(Self::NAME)
             .description("Sends the roles menu in the current channel")
+            .dm_permission(false)
+            .default_member_permissions(Permissions::ADMINISTRATOR)
     }
 }
 
 #[async_trait]
 impl SlashCommandRespond for RolesSlashCommand {
-    async fn respond(
-        ctx: Context,
-        interaction: &ApplicationCommandInteraction,
-    ) -> serenity::Result<()> {
+    async fn respond(ctx: Context, interaction: &ApplicationCommandInteraction) {
         fn describe_role_to_field<R: RoleDescribe>() -> (String, &'static str, bool) {
             (format!("{} {}", R::EMOJI, R::NAME), R::DESCRIPTION, true)
         }
@@ -42,7 +40,7 @@ impl SlashCommandRespond for RolesSlashCommand {
             describe_role_to_field::<roles::ScripterRole>(),
         ];
 
-        interaction
+        if let Err(err) = interaction
             .create_interaction_response(&ctx.http, |response| {
                 response
                     .kind(InteractionResponseType::ChannelMessageWithSource)
@@ -66,5 +64,8 @@ impl SlashCommandRespond for RolesSlashCommand {
                     })
             })
             .await
+        {
+            eprintln!("Failed to create an interaction response: {err}");
+        }
     }
 }

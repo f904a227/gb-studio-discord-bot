@@ -25,14 +25,11 @@ impl<R: RoleDescribe> ComponentCreate for RoleButton<R> {
 
 #[async_trait]
 impl<R: RoleDescribe> ComponentRespond for RoleButton<R> {
-    async fn respond(
-        ctx: Context,
-        component: &mut MessageComponentInteraction,
-    ) -> serenity::Result<()> {
+    async fn respond(ctx: Context, component: &mut MessageComponentInteraction) {
         let member = if let Some(member) = component.member.as_mut() {
             member
         } else {
-            return component
+            if let Err(err) = component
                 .create_interaction_response(&ctx.http, |response| {
                     response
                         .kind(InteractionResponseType::ChannelMessageWithSource)
@@ -40,37 +37,70 @@ impl<R: RoleDescribe> ComponentRespond for RoleButton<R> {
                             data.content("**Error**: This button should only be used in a server!")
                         })
                 })
-                .await;
+                .await
+            {
+                eprintln!("Failed to create an interaction response: {err}");
+            }
+            return;
         };
 
         let guild_id = component.guild_id.expect("`member` data should be present");
-        let roles = guild_id.roles(&ctx.http).await?;
-        let role = roles.values().find(|role| role.name == R::NAME);
 
-        let response_content = match role {
-            Some(role_to_add) if !member.roles.contains(&role_to_add.id) => {
-                member.add_role(&ctx.http, &role_to_add.id).await?;
-                format!("**Success**: Added role {}.", role_to_add.name)
-            }
-            Some(role_to_remove) => {
-                member.remove_role(&ctx.http, &role_to_remove.id).await?;
-                format!("**Success**: Removed role {}.", role_to_remove.name)
-            }
-            None => {
-                format!("**Error**: Missing role `{}` on the server!", R::NAME)
+        let roles = match guild_id.roles(&ctx.http).await {
+            Ok(roles) => roles,
+            Err(err) => {
+                eprintln!("Failed to fetch all roles of a guild: {err}");
+                return;
             }
         };
 
-        component
+        let role = roles.values().find(|role| role.name == R::NAME);
+
+        let (content, flags) = match role {
+            Some(role_to_add) if !member.roles.contains(&role_to_add.id) => {
+                if let Err(err) = member.add_role(&ctx.http, &role_to_add.id).await {
+                    eprintln!("Failed to create add a role to a member: {err}");
+                    (
+                        format!("**Error**: Failed to add role {}.", role_to_add.name),
+                        MessageFlags::default(),
+                    )
+                } else {
+                    (
+                        format!("**Success**: Added role {}.", role_to_add.name),
+                        MessageFlags::EPHEMERAL,
+                    )
+                }
+            }
+            Some(role_to_remove) => {
+                if let Err(err) = member.remove_role(&ctx.http, &role_to_remove.id).await {
+                    eprintln!("Failed to remove a role from a member: {err}");
+                    (
+                        format!("**Error**: Failed to remove role {}.", role_to_remove.name),
+                        MessageFlags::default(),
+                    )
+                } else {
+                    (
+                        format!("**Success**: Removed role {}.", role_to_remove.name),
+                        MessageFlags::EPHEMERAL,
+                    )
+                }
+            }
+            None => (
+                format!("**Error**: Missing role `{}` on the server!", R::NAME),
+                MessageFlags::default(),
+            ),
+        };
+
+        if let Err(err) = component
             .create_interaction_response(&ctx.http, |response| {
                 response
                     .kind(InteractionResponseType::ChannelMessageWithSource)
-                    .interaction_response_data(|data| {
-                        data.content(response_content)
-                            .flags(MessageFlags::EPHEMERAL)
-                    })
+                    .interaction_response_data(|data| data.content(content).flags(flags))
             })
             .await
+        {
+            eprintln!("Failed to create an interaction response: {err}");
+        }
     }
 }
 

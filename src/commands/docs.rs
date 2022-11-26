@@ -31,10 +31,7 @@ impl SlashCommandRegister for DocsSlashCommand {
 
 #[async_trait]
 impl SlashCommandRespond for DocsSlashCommand {
-    async fn respond(
-        ctx: Context,
-        interaction: &ApplicationCommandInteraction,
-    ) -> serenity::Result<()> {
+    async fn respond(ctx: Context, interaction: &ApplicationCommandInteraction) {
         let options = &interaction.data.options;
 
         let mut content = docs::ROOT; // Default response content.
@@ -69,7 +66,7 @@ impl SlashCommandRespond for DocsSlashCommand {
             }
         }
 
-        interaction
+        if let Err(err) = interaction
             .create_interaction_response(&ctx.http, |response| {
                 response
                     .kind(InteractionResponseType::ChannelMessageWithSource)
@@ -78,15 +75,15 @@ impl SlashCommandRespond for DocsSlashCommand {
                     })
             })
             .await
+        {
+            eprintln!("Failed to create an interaction response: {err}");
+        }
     }
 }
 
 #[async_trait]
 impl SlashCommandAutocomplete for DocsSlashCommand {
-    async fn autocomplete(
-        ctx: Context,
-        interaction: &AutocompleteInteraction,
-    ) -> serenity::Result<()> {
+    async fn autocomplete(ctx: Context, interaction: &AutocompleteInteraction) {
         let options = &interaction.data.options;
 
         if let Some(focused_option) = options.iter().find(|option| option.focused) {
@@ -123,11 +120,14 @@ impl SlashCommandAutocomplete for DocsSlashCommand {
                         })
                         .collect();
 
-                    return interaction
+                    if let Err(err) = interaction
                         .create_autocomplete_response(&ctx.http, |autocomplete| {
                             autocomplete.set_choices(Value::Array(choices))
                         })
-                        .await;
+                        .await
+                    {
+                        eprintln!("Failed to create an autocomplete response: {err}");
+                    }
                 }
                 option_name => {
                     unreachable!(
@@ -136,7 +136,5 @@ impl SlashCommandAutocomplete for DocsSlashCommand {
                 }
             }
         }
-
-        Ok(())
     }
 }

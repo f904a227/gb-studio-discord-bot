@@ -40,7 +40,7 @@ impl EventHandler for Handler {
         #[cfg(debug_assertions)]
         println!("Received interaction: {interaction:#?}");
 
-        let result = match interaction {
+        match interaction {
             Interaction::ApplicationCommand(command) => {
                 slash_command_respond!(
                     ctx,
@@ -70,10 +70,6 @@ impl EventHandler for Handler {
             unsupported_interaction => {
                 unimplemented!("Unsupported interaction: {unsupported_interaction:?}");
             }
-        };
-
-        if let Err(err) = result {
-            eprintln!("Failed to respond to interaction: {err}");
         }
     }
 

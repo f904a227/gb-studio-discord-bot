@@ -8,9 +8,12 @@ pub(self) mod prelude {
         async_trait,
         builder::CreateApplicationCommand,
         client::Context,
-        model::application::interaction::{
-            application_command::ApplicationCommandInteraction,
-            autocomplete::AutocompleteInteraction, InteractionResponseType,
+        model::{
+            application::interaction::{
+                application_command::ApplicationCommandInteraction,
+                autocomplete::AutocompleteInteraction, InteractionResponseType,
+            },
+            permissions::Permissions,
         },
     };
 }
@@ -33,18 +36,12 @@ pub(crate) trait SlashCommandRegister {
 
 #[async_trait]
 pub(crate) trait SlashCommandRespond: SlashCommandRegister {
-    async fn respond(
-        ctx: Context,
-        interaction: &ApplicationCommandInteraction,
-    ) -> serenity::Result<()>;
+    async fn respond(ctx: Context, interaction: &ApplicationCommandInteraction);
 }
 
 #[async_trait]
 pub(crate) trait SlashCommandAutocomplete: SlashCommandRegister {
-    async fn autocomplete(
-        ctx: Context,
-        interaction: &AutocompleteInteraction,
-    ) -> serenity::Result<()>;
+    async fn autocomplete(ctx: Context, interaction: &AutocompleteInteraction);
 }
 
 #[macro_export]
