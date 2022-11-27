@@ -9,6 +9,7 @@ use crate::{
         content::roles::{self, RoleDescribe},
     },
 };
+use serenity::model::mention::Mentionable;
 
 pub(crate) struct RolesSlashCommand;
 
@@ -64,15 +65,16 @@ impl SlashCommandRespond for RolesSlashCommand {
             })
             .await;
 
+        let channel_mention = channel_id.mention();
         let (content, flags) = match result {
             Ok(_) => (
-                format!("**Success**: Sent the role menu in {channel_id}."),
+                format!("**Success**: Sent the role menu in {channel_mention}."),
                 MessageFlags::EPHEMERAL,
             ),
             Err(err) => {
                 eprintln!("Failed to send a message: {err}");
                 (
-                    format!("**Error**: Failed to send the role menu in {channel_id}."),
+                    format!("**Error**: Failed to send the role menu in {channel_mention}."),
                     MessageFlags::default(),
                 )
             }
