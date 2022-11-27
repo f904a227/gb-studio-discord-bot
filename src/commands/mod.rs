@@ -1,3 +1,4 @@
+mod contribute;
 mod docs;
 mod ping;
 mod roles;
@@ -26,7 +27,10 @@ use serenity::{
         application_command::ApplicationCommandInteraction, autocomplete::AutocompleteInteraction,
     },
 };
-pub(crate) use {docs::DocsSlashCommand, ping::PingSlashCommand, roles::RolesSlashCommand};
+pub(crate) use {
+    contribute::ContributeSlashCommand, docs::DocsSlashCommand, ping::PingSlashCommand,
+    roles::RolesSlashCommand,
+};
 
 pub(crate) trait SlashCommandRegister {
     const NAME: &'static str;

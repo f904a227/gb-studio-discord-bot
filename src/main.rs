@@ -3,7 +3,7 @@ mod components;
 mod content;
 
 use crate::{
-    commands::{DocsSlashCommand, PingSlashCommand, RolesSlashCommand},
+    commands::{ContributeSlashCommand, DocsSlashCommand, PingSlashCommand, RolesSlashCommand},
     components::buttons::{
         ArtistRoleButton, BetaTesterRoleRoleButton, DesignerRoleButton,
         HardwareEnthusiastRoleButton, MusicianRoleButton, ScripterRoleButton,
@@ -12,7 +12,11 @@ use crate::{
 use lazy_static::lazy_static;
 use serenity::{
     async_trait,
-    model::{application::interaction::Interaction, gateway::Ready, id::GuildId},
+    model::{
+        application::{command::Command, interaction::Interaction},
+        gateway::{Activity, Ready},
+        id::GuildId,
+    },
     prelude::*,
 };
 use std::env;
@@ -45,7 +49,12 @@ impl EventHandler for Handler {
                 slash_command_respond!(
                     ctx,
                     command,
-                    [PingSlashCommand, DocsSlashCommand, RolesSlashCommand]
+                    [
+                        ContributeSlashCommand,
+                        DocsSlashCommand,
+                        PingSlashCommand,
+                        RolesSlashCommand
+                    ]
                 )
                 .await
             }
@@ -76,17 +85,23 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         println!("Connected as {}", ready.user.tag());
 
-        let guild_commands =
-            GuildId::set_application_commands(&DISCORD_GUILD_ID, &ctx.http, |commands| {
-                slash_command_register!(
-                    commands,
-                    [PingSlashCommand, DocsSlashCommand, RolesSlashCommand]
-                )
-            })
-            .await
-            .expect("Failed to create guild application commands");
+        ctx.set_activity(Activity::playing(env!("CARGO_PKG_VERSION")))
+            .await;
 
-        println!("Created the following guild application commands: {guild_commands:#?}");
+        GuildId::set_application_commands(&DISCORD_GUILD_ID, &ctx.http, |commands| {
+            slash_command_register!(commands, [RolesSlashCommand])
+        })
+        .await
+        .expect("Failed to set guild application commands");
+
+        Command::set_global_application_commands(&ctx.http, |commands| {
+            slash_command_register!(
+                commands,
+                [ContributeSlashCommand, DocsSlashCommand, PingSlashCommand]
+            )
+        })
+        .await
+        .expect("Failed to set global application commands");
 
         println!("Ready!");
     }
