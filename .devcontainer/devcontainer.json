@@ -1,5 +1,7 @@
 {
   "image": "mcr.microsoft.com/devcontainers/rust:latest",
   "features": {
+    "ghcr.io/devcontainers/features/rust:1": {},
+    "ghcr.io/devcontainers-contrib/features/pre-commit:1": {}
   }
 }
