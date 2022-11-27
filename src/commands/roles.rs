@@ -40,28 +40,49 @@ impl SlashCommandRespond for RolesSlashCommand {
             describe_role_to_field::<roles::ScripterRole>(),
         ];
 
+        let channel_id = interaction.channel_id;
+
+        let result = channel_id
+            .send_message(&ctx.http, |message| {
+                message
+                    .embed(|embed| embed.fields(fields))
+                    .components(|components| {
+                        components
+                            .create_action_row(|action_row| {
+                                action_row
+                                    .create_button(ArtistRoleButton::create)
+                                    .create_button(BetaTesterRoleRoleButton::create)
+                                    .create_button(DesignerRoleButton::create)
+                            })
+                            .create_action_row(|action_row| {
+                                action_row
+                                    .create_button(HardwareEnthusiastRoleButton::create)
+                                    .create_button(MusicianRoleButton::create)
+                                    .create_button(ScripterRoleButton::create)
+                            })
+                    })
+            })
+            .await;
+
+        let (content, flags) = match result {
+            Ok(_) => (
+                format!("**Success**: Sent the role menu in {channel_id}."),
+                MessageFlags::EPHEMERAL,
+            ),
+            Err(err) => {
+                eprintln!("Failed to send a message: {err}");
+                (
+                    format!("**Error**: Failed to send the role menu in {channel_id}."),
+                    MessageFlags::default(),
+                )
+            }
+        };
+
         if let Err(err) = interaction
             .create_interaction_response(&ctx.http, |response| {
                 response
                     .kind(InteractionResponseType::ChannelMessageWithSource)
-                    .interaction_response_data(|data| {
-                        data.embed(|embed| embed.fields(fields))
-                            .components(|components| {
-                                components
-                                    .create_action_row(|action_row| {
-                                        action_row
-                                            .create_button(ArtistRoleButton::create)
-                                            .create_button(BetaTesterRoleRoleButton::create)
-                                            .create_button(DesignerRoleButton::create)
-                                    })
-                                    .create_action_row(|action_row| {
-                                        action_row
-                                            .create_button(HardwareEnthusiastRoleButton::create)
-                                            .create_button(MusicianRoleButton::create)
-                                            .create_button(ScripterRoleButton::create)
-                                    })
-                            })
-                    })
+                    .interaction_response_data(|data| data.content(content).flags(flags))
             })
             .await
         {

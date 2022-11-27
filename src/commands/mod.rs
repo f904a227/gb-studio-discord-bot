@@ -11,7 +11,7 @@ pub(self) mod prelude {
         model::{
             application::interaction::{
                 application_command::ApplicationCommandInteraction,
-                autocomplete::AutocompleteInteraction, InteractionResponseType,
+                autocomplete::AutocompleteInteraction, InteractionResponseType, MessageFlags,
             },
             permissions::Permissions,
         },
