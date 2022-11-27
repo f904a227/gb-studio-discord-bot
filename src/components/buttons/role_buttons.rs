@@ -63,12 +63,12 @@ impl<R: RoleDescribe> ComponentRespond for RoleButton<R> {
                 if let Err(err) = member.add_role(&ctx.http, &role_to_add.id).await {
                     eprintln!("Failed to create add a role to a member: {err}");
                     (
-                        format!("**Error**: Failed to add role {}.", role_to_add.name),
+                        format!("**Error**: Failed to add role `{}`.", role_to_add.name),
                         MessageFlags::default(),
                     )
                 } else {
                     (
-                        format!("**Success**: Added role {}.", role_to_add.name),
+                        format!("**Success**: Added role `{}`.", role_to_add.name),
                         MessageFlags::EPHEMERAL,
                     )
                 }
