@@ -77,12 +77,15 @@ impl<R: RoleDescribe> ComponentRespond for RoleButton<R> {
                 if let Err(err) = member.remove_role(&ctx.http, &role_to_remove.id).await {
                     eprintln!("Failed to remove a role from a member: {err}");
                     (
-                        format!("**Error**: Failed to remove role {}.", role_to_remove.name),
+                        format!(
+                            "**Error**: Failed to remove role `{}`.",
+                            role_to_remove.name
+                        ),
                         MessageFlags::default(),
                     )
                 } else {
                     (
-                        format!("**Success**: Removed role {}.", role_to_remove.name),
+                        format!("**Success**: Removed role `{}`.", role_to_remove.name),
                         MessageFlags::EPHEMERAL,
                     )
                 }
