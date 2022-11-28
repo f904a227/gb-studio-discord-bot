@@ -76,7 +76,7 @@ impl SlashCommandRespond for DocsSlashCommand {
             })
             .await
         {
-            eprintln!("Failed to create an interaction response: {err}");
+            eprintln!("Failed to create an interaction response: {err:?}");
         }
     }
 }
@@ -126,7 +126,7 @@ impl SlashCommandAutocomplete for DocsSlashCommand {
                         })
                         .await
                     {
-                        eprintln!("Failed to create an autocomplete response: {err}");
+                        eprintln!("Failed to create an autocomplete response: {err:?}");
                     }
                 }
                 option_name => {

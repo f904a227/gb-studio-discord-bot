@@ -26,7 +26,7 @@ impl SlashCommandRespond for ContributeSlashCommand {
             })
             .await
         {
-            eprintln!("Failed to create an interaction response: {err}");
+            eprintln!("Failed to create an interaction response: {err:?}");
         }
     }
 }

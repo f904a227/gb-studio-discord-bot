@@ -66,17 +66,11 @@ impl SlashCommandRespond for RolesSlashCommand {
             .await;
 
         let channel_mention = channel_id.mention();
-        let (content, flags) = match result {
-            Ok(_) => (
-                format!("**Success**: Sent the role menu in {channel_mention}."),
-                MessageFlags::EPHEMERAL,
-            ),
+        let content = match result {
+            Ok(_) => format!("**Success**: Sent the role menu in {channel_mention}."),
             Err(err) => {
-                eprintln!("Failed to send a message: {err}");
-                (
-                    format!("**Error**: Failed to send the role menu in {channel_mention}."),
-                    MessageFlags::default(),
-                )
+                eprintln!("Failed to send a message: {err:?}");
+                format!("**Error**: Failed to send the role menu in {channel_mention}.")
             }
         };
 
@@ -84,11 +78,13 @@ impl SlashCommandRespond for RolesSlashCommand {
             .create_interaction_response(&ctx.http, |response| {
                 response
                     .kind(InteractionResponseType::ChannelMessageWithSource)
-                    .interaction_response_data(|data| data.content(content).flags(flags))
+                    .interaction_response_data(|data| {
+                        data.content(content).flags(MessageFlags::EPHEMERAL)
+                    })
             })
             .await
         {
-            eprintln!("Failed to create an interaction response: {err}");
+            eprintln!("Failed to create an interaction response: {err:?}");
         }
     }
 }

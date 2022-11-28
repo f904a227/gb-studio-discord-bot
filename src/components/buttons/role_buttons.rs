@@ -39,7 +39,7 @@ impl<R: RoleDescribe> ComponentRespond for RoleButton<R> {
                 })
                 .await
             {
-                eprintln!("Failed to create an interaction response: {err}");
+                eprintln!("Failed to create an interaction response: {err:?}");
             }
             return;
         };
@@ -51,60 +51,47 @@ impl<R: RoleDescribe> ComponentRespond for RoleButton<R> {
         let roles = match guild_id.roles(&ctx.http).await {
             Ok(roles) => roles,
             Err(err) => {
-                eprintln!("Failed to fetch all roles of a guild: {err}");
+                eprintln!("Failed to fetch all roles of a guild: {err:?}");
                 return;
             }
         };
 
         let role = roles.values().find(|role| role.name == R::NAME);
 
-        let (content, flags) = match role {
+        let content = match role {
             Some(role_to_add) if !member.roles.contains(&role_to_add.id) => {
                 if let Err(err) = member.add_role(&ctx.http, &role_to_add.id).await {
-                    eprintln!("Failed to create add a role to a member: {err}");
-                    (
-                        format!("**Error**: Failed to add role `{}`.", role_to_add.name),
-                        MessageFlags::default(),
-                    )
+                    eprintln!("Failed to add a role to a member: {err:?}");
+                    format!("**Error**: Failed to add role `{}`.", role_to_add.name)
                 } else {
-                    (
-                        format!("**Success**: Added role `{}`.", role_to_add.name),
-                        MessageFlags::EPHEMERAL,
-                    )
+                    format!("**Success**: Added role `{}`.", role_to_add.name)
                 }
             }
             Some(role_to_remove) => {
                 if let Err(err) = member.remove_role(&ctx.http, &role_to_remove.id).await {
-                    eprintln!("Failed to remove a role from a member: {err}");
-                    (
-                        format!(
-                            "**Error**: Failed to remove role `{}`.",
-                            role_to_remove.name
-                        ),
-                        MessageFlags::default(),
+                    eprintln!("Failed to remove a role from a member: {err:?}");
+                    format!(
+                        "**Error**: Failed to remove role `{}`.",
+                        role_to_remove.name
                     )
                 } else {
-                    (
-                        format!("**Success**: Removed role `{}`.", role_to_remove.name),
-                        MessageFlags::EPHEMERAL,
-                    )
+                    format!("**Success**: Removed role `{}`.", role_to_remove.name)
                 }
             }
-            None => (
-                format!("**Error**: Missing role `{}` on the server!", R::NAME),
-                MessageFlags::default(),
-            ),
+            None => format!("**Error**: Missing role `{}` on the server!", R::NAME),
         };
 
         if let Err(err) = interaction
             .create_interaction_response(&ctx.http, |response| {
                 response
                     .kind(InteractionResponseType::ChannelMessageWithSource)
-                    .interaction_response_data(|data| data.content(content).flags(flags))
+                    .interaction_response_data(|data| {
+                        data.content(content).flags(MessageFlags::EPHEMERAL)
+                    })
             })
             .await
         {
-            eprintln!("Failed to create an interaction response: {err}");
+            eprintln!("Failed to create an interaction response: {err:?}");
         }
     }
 }
