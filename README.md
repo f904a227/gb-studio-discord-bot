@@ -10,7 +10,7 @@ The bot requires at least the "Manage Roles" and "Send Messages" permissions (`2
 1. Create a new application on the [Discord Developer Portal](https://discord.com/developers) and add a bot.
 2. Invite the bot to your server using this link: `https://discord.com/api/oauth2/authorize?client_id=YOUR-APP-ID-GOES-HERE&permissions=268437504&scope=bot%20applications.commands`; replace `YOUR-APP-ID-GOES-HERE` by your application ID.
 3. Clone the repository.
-4. Run `DISCORD_BOT_TOKEN='YOUR-TOKEN-GOES-HERE' DISCORD_GUILD_ID='YOUR-SERVER-ID-GOES-HERE' cargo run --release`; replace `YOUR-TOKEN-GOES-HERE` by your bot token and `YOUR-SERVER-ID-GOES-HERE` by your server ID.
+4. Run `DISCORD_BOT_TOKEN='YOUR-TOKEN-GOES-HERE' DISCORD_GUILD_ID='YOUR-SERVER-ID-GOES-HERE' cargo run --release`; replace `YOUR-TOKEN-GOES-HERE` by your bot token and `YOUR-SERVER-ID-GOES-HERE` by your server ID. You can also run the bot in [a container](Containerfile): build the image using `podman build -t gb-studio-discord-bot .` and run the container using `podman run -d -e 'DISCORD_BOT_TOKEN=YOUR-TOKEN-GOES-HERE' -e 'DISCORD_GUILD_ID=YOUR-SERVER-ID-GOES-HERE' gb-studio-discord-bot`.
 
 ## Contributing to the bot
 
